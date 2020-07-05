@@ -22,42 +22,55 @@
     </div>
 
     <script>
+        const heroes = [{
+                id: 11,
+                name: 'Dr Nice'
+            }, {
+                id: 12,
+                name: 'Narco'
+            }, {
+                id: 13,
+                name: 'Bombasto'
+            }, {
+                id: 14,
+                name: 'Celeritas'
+            }, {
+                id: 15,
+                name: 'Magneta'
+            }, {
+                id: 16,
+                name: 'RubberMan'
+            }, {
+                id: 17,
+                name: 'Dynama'
+            }, {
+                id: 18,
+                name: 'Dr IQ'
+            }, {
+                id: 19,
+                name: 'Magma'
+            }, {
+                id: 20,
+                name: 'Tornado'
+            }]
+
+        function getHeroes() {
+            store.dispatch('add', 'fetched heroes')
+
+            return heroes
+        }
+
+        function getHero(id) {
+            store.dispatch('add', `HeroService: fetched hero id=${id}`)
+
+            return heroes.find(h => h.id == id)
+        }
+
         Vue.use(Vuex)
 
         const store = new Vuex.Store({
             state: {
-                messages: [],
-                heroes: [{
-                    id: 11,
-                    name: 'Dr Nice'
-                }, {
-                    id: 12,
-                    name: 'Narco'
-                }, {
-                    id: 13,
-                    name: 'Bombasto'
-                }, {
-                    id: 14,
-                    name: 'Celeritas'
-                }, {
-                    id: 15,
-                    name: 'Magneta'
-                }, {
-                    id: 16,
-                    name: 'RubberMan'
-                }, {
-                    id: 17,
-                    name: 'Dynama'
-                }, {
-                    id: 18,
-                    name: 'Dr IQ'
-                }, {
-                    id: 19,
-                    name: 'Magma'
-                }, {
-                    id: 20,
-                    name: 'Tornado'
-                }]
+                messages: []
             },
             mutations: {
                 ADD: (state, message) => {
@@ -98,7 +111,7 @@
                     return;
                 },
                 getHero() {
-                    this.hero = this.$store.state.heroes.filter(h => h.id == this.$route.params.id)[0]
+                    this.hero = getHero(this.$route.params.id)
                 },
                 goBack() {
                     this.$router.go(-1)
@@ -126,16 +139,16 @@
                 }
             },
             created() {
-                this.heroes = this.getHeroes()
+                this.getHeroes()
             },
             methods: {
                 onSelect(hero) {
-                    this.$router.push({ path: `/detail/${hero.id}` })
+                    this.$router.push({
+                        path: `/detail/${hero.id}`
+                    })
                 },
                 getHeroes() {
-                    this.$store.dispatch('add', 'fetched heroes')
-
-                    return this.$store.state.heroes
+                    this.heroes = getHeroes()
                 }
             },
             template: `
@@ -182,7 +195,7 @@
             },
             methods: {
                 getHeroes() {
-                    this.heroes = this.$store.state.heroes.slice(1, 5)
+                    this.heroes = getHeroes().slice(1, 5)
                 }
             },
             template: `
