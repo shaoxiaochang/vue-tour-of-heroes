@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/vuex@3.5.1/dist/vuex.js"></script>
+    <script src="https://unpkg.com/vue-router@3.3.4/dist/vue-router.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <h1>{{ title }}</h1>
+        <nav>
+            <router-link to="/dashboard">Dashboard</router-link>
+            <router-link to="/heroes">Heroes</router-link>
+        </nav>
+        <router-view></router-view>
+        <messages></messages>
+    </div>
+
+    <script>
+        Vue.use(Vuex)
+
+        const store = new Vuex.Store({
+            state: {
+                messages: [],
+                heroes: [{
+                    id: 11,
+                    name: 'Dr Nice'
+                }, {
+                    id: 12,
+                    name: 'Narco'
+                }, {
+                    id: 13,
+                    name: 'Bombasto'
+                }, {
+                    id: 14,
+                    name: 'Celeritas'
+                }, {
+                    id: 15,
+                    name: 'Magneta'
+                }, {
+                    id: 16,
+                    name: 'RubberMan'
+                }, {
+                    id: 17,
+                    name: 'Dynama'
+                }, {
+                    id: 18,
+                    name: 'Dr IQ'
+                }, {
+                    id: 19,
+                    name: 'Magma'
+                }, {
+                    id: 20,
+                    name: 'Tornado'
+                }]
+            },
+            mutations: {
+                ADD: (state, message) => {
+                    state.messages.push(message)
+                },
+                CLEAR: (state) => {
+                    state.messages = []
+                }
+            },
+            actions: {
+                add({
+                    commit
+                }, message) {
+                    commit('ADD', message)
+                },
+                clear({
+                    commit
+                }) {
+                    commit('CLEAR')
+                }
+            }
+        })
+
+        Vue.component('hero-detail', {
+            data() {
+                return {
+                    hero: {}
+                }
+            },
+            created() {
+                this.getHero();
+            },
+            methods: {
+                uppercase(value) {
+                    if (value) {
+                        return value.toUpperCase()
+                    }
+                    return;
+                },
+                getHero() {
+                    this.hero = this.$store.state.heroes.filter(h => h.id == this.$route.params.id)[0]
+                },
+                goBack() {
+                    this.$router.go(-1)
+                }
+            },
+            template: `
+                <div v-if="hero">
+                    <h2>{{ uppercase(hero.name) }} Details</h2>
+                    <div><span>id: </span>{{hero.id}}</div>
+                    <div>
+                        <label>name:
+                            <input v-model="hero.name" placeholder="name">
+                        </label>
+                    </div>
+
+                    <button @click="goBack()">go back</button>
+                </div>
+            `
+        })
+
+        Vue.component('heroes', {
+            data() {
+                return {
+                    heroes: []
+                }
+            },
+            created() {
+                this.heroes = this.getHeroes()
+            },
+            methods: {
+                onSelect(hero) {
+                    this.$router.push({ path: `/detail/${hero.id}` })
+                },
+                getHeroes() {
+                    this.$store.dispatch('add', 'fetched heroes')
+
+                    return this.$store.state.heroes
+                }
+            },
+            template: `
+                <div>
+                    <h2>My Heroes</h2>
+
+                    <ul class="heroes">
+                        <li v-for="hero in heroes" v-on:click="onSelect(hero)">
+                            <span class="badge">{{hero.id}}</span> {{hero.name}}
+                        </li>
+                    </ul>
+                </div>
+            `
+        })
+
+        Vue.component('messages', {
+            computed: {
+                messages() {
+                    return this.$store.state.messages
+                }
+            },
+            methods: {
+                clear() {
+                    this.$store.dispatch('clear')
+                }
+            },
+            template: `
+                <div v-if="messages.length">
+                    <h2>Messages</h2>
+                    <button class="clear" @click="clear">clear</button>
+                    <div v-for='message in messages'> {{message}} </div>
+                </div>
+            `
+        })
+
+        Vue.component('dashboard', {
+            data() {
+                return {
+                    heroes: []
+                }
+            },
+            created() {
+                this.getHeroes()
+            },
+            methods: {
+                getHeroes() {
+                    this.heroes = this.$store.state.heroes.slice(1, 5)
+                }
+            },
+            template: `
+                <div>
+                    <h3>Top Heroes</h3>
+                    <div class="grid grid-pad">
+                        <router-link v-for="hero of heroes" class="col-1-4" :to="{path: '/detail/' + hero.id}">
+                            <div class="module hero">
+                                <h4>{{hero.name}}</h4>
+                            </div>
+                        </router-link>
+                    </div>
+                </div>
+            `
+        })
+
+        const HeroesComponent = {
+            template: '<heroes></heroes>'
+        }
+
+        const DashboardComponent = {
+            template: '<dashboard></dashboard>'
+        }
+
+        const HeroDetailComponent = {
+            template: `<hero-detail></hero-detail>`
+        }
+
+        const routes = [{
+            path: '/heroes',
+            component: HeroesComponent
+        }, {
+            path: '/dashboard',
+            component: DashboardComponent
+        }, {
+            path: '/',
+            redirect: '/dashboard'
+        }, {
+            path: '/detail/:id',
+            component: HeroDetailComponent
+        }]
+
+        const router = new VueRouter({
+            routes // (缩写) 相当于 routes: routes
+        })
+
+        var app = new Vue({
+            el: '#app',
+            store,
+            router,
+            data: {
+                title: 'Tour of Heroes'
+            }
+        })
+    </script>
+
+    <style>
+        /* Application-wide Styles */
+        h1 {
+            color: #369;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 250%;
+        }
+
+        h2,
+        h3 {
+            color: #444;
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: lighter;
+        }
+
+        body {
+            margin: 2em;
+        }
+
+        body,
+        input[type="text"],
+        button {
+            color: #333;
+            font-family: Cambria, Georgia;
+        }
+
+        /* everywhere else */
+        * {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        /* HeroesComponent's private CSS styles */
+        .heroes {
+            margin: 0 0 2em 0;
+            list-style-type: none;
+            padding: 0;
+            width: 15em;
+        }
+
+        .heroes li {
+            cursor: pointer;
+            position: relative;
+            left: 0;
+            background-color: #EEE;
+            margin: .5em;
+            padding: .3em 0;
+            height: 1.6em;
+            border-radius: 4px;
+        }
+
+        .heroes li:hover {
+            color: #607D8B;
+            background-color: #DDD;
+            left: .1em;
+        }
+
+        .heroes li.selected {
+            background-color: #CFD8DC;
+            color: white;
+        }
+
+        .heroes li.selected:hover {
+            background-color: #BBD8DC;
+            color: white;
+        }
+
+        .heroes .badge {
+            display: inline-block;
+            font-size: small;
+            color: white;
+            padding: 0.8em 0.7em 0 0.7em;
+            background-color: #405061;
+            line-height: 1em;
+            position: relative;
+            left: -1px;
+            top: -4px;
+            height: 1.8em;
+            margin-right: .8em;
+            border-radius: 4px 0 0 4px;
+        }
+
+        /* MessagesComponent's private CSS styles */
+        h2 {
+            color: red;
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: lighter;
+        }
+
+        body {
+            margin: 2em;
+        }
+
+        body,
+        input[text],
+        button {
+            color: crimson;
+            font-family: Cambria, Georgia;
+        }
+
+        button.clear {
+            font-family: Arial;
+            background-color: #eee;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            cursor: hand;
+        }
+
+        button:hover {
+            background-color: #cfd8dc;
+        }
+
+        button:disabled {
+            background-color: #eee;
+            color: #aaa;
+            cursor: auto;
+        }
+
+        button.clear {
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        /* nav CSS styles */
+        nav a {
+            padding: 5px 10px;
+            text-decoration: none;
+            margin-top: 10px;
+            display: inline-block;
+            background-color: #eee;
+            border-radius: 4px;
+        }
+
+        nav a:visited,
+        a:link {
+            color: #334953;
+        }
+
+        nav a:hover {
+            color: #039be5;
+            background-color: #cfd8dc;
+        }
+
+        nav a.active {
+            color: #039be5;
+        }
+
+        /* DashboardComponent's private CSS styles */
+        [class*='col-'] {
+            float: left;
+            padding-right: 20px;
+            padding-bottom: 20px;
+        }
+
+        [class*='col-']:last-of-type {
+            padding-right: 0;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        *,
+        *:after,
+        *:before {
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+
+        h3 {
+            text-align: center;
+            margin-bottom: 0;
+        }
+
+        h4 {
+            position: relative;
+        }
+
+        .grid {
+            margin: 0;
+        }
+
+        .col-1-4 {
+            width: 25%;
+        }
+
+        .module {
+            padding: 20px;
+            text-align: center;
+            color: #eee;
+            max-height: 120px;
+            min-width: 120px;
+            background-color: #3f525c;
+            border-radius: 2px;
+        }
+
+        .module:hover {
+            background-color: #eee;
+            cursor: pointer;
+            color: #607d8b;
+        }
+
+        .grid-pad {
+            padding: 10px 0;
+        }
+
+        .grid-pad>[class*='col-']:last-of-type {
+            padding-right: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .module {
+                font-size: 10px;
+                max-height: 75px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .grid {
+                margin: 0;
+            }
+
+            .module {
+                min-width: 60px;
+            }
+        }
+    </style>
+</body>
+
+</html>
